@@ -7,6 +7,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "jest",
+    "lint": "tsc --project tsconfig.json && eslint 'src/**/*.{js,ts,tsx}'",
     "xstate:typegen": "xstate typegen 'src/modules/**/*.machine.ts'"
   },
   "dependencies": {
