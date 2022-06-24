@@ -1,13 +1,16 @@
 import { assign, createMachine, send } from "xstate";
 import { Player } from "src/types/player";
-import { Board, WinType } from "src/types/board";
+import { Board } from "src/types/board";
+import { WinType } from "src/types/game";
 import { initalBoard } from "src/constants/board";
 import { localStorageKeys } from "src/constants/localStorage";
+import { deepCopyBoard } from "src/utils";
 
 interface TicTacToeMachineContext {
   board: Board;
   currentPlayer: Player;
   beginningWinIndex?: number;
+  totalNumOfMoves: number;
 }
 
 type MoveEvent = { type: "MOVE"; row: number; column: number };
@@ -34,8 +37,9 @@ const ticTacToeMachine = createMachine(
     id: "ticTacToe",
     initial: "checkPersistedGame",
     context: {
-      board: initalBoard,
+      board: deepCopyBoard(initalBoard.map((column) => [...column])),
       currentPlayer: Player.x,
+      totalNumOfMoves: 0,
     },
     on: {
       RESET_GAME: {
@@ -43,7 +47,6 @@ const ticTacToeMachine = createMachine(
         target: "idle",
       },
     },
-
     states: {
       checkPersistedGame: {
         always: [
@@ -61,7 +64,7 @@ const ticTacToeMachine = createMachine(
         },
       },
       playing: {
-        initial: "xPlaying",
+        initial: "checkPlayer",
         states: {
           checkPlayer: {
             always: [
@@ -97,7 +100,10 @@ const ticTacToeMachine = createMachine(
             },
           },
           checkMoveResult: {
-            entry: "checkingResult",
+            entry: "addMoveCount",
+            invoke: {
+              src: "checkingResult",
+            },
             on: {
               CHECK_RESULT_COMPLETE: [
                 {
@@ -116,8 +122,8 @@ const ticTacToeMachine = createMachine(
                   actions: "setBeginningWinIndex",
                 },
                 {
-                  cond: "isTie",
-                  target: "#ticTacToe.gameEnd.tie",
+                  cond: "isDraw",
+                  target: "#ticTacToe.gameEnd.draw",
                 },
                 {
                   cond: "isPlayerX",
@@ -140,7 +146,7 @@ const ticTacToeMachine = createMachine(
               diagonalWin: { type: "final" },
             },
           },
-          tie: { type: "final" },
+          draw: { type: "final" },
         },
       },
     },
@@ -150,11 +156,14 @@ const ticTacToeMachine = createMachine(
       hasPersistedGame: (_) =>
         !!localStorage.getItem(localStorageKeys.currentBoard),
       isEmptySlot: (context, event) => !context.board[event.row][event.column],
-      isHorizontalWin: (_, event) => event.winType === WinType.horitzontalWin,
-      isVerticalWin: (_, event) => event.winType === WinType.verticalWin,
-      isDiagonalWin: (_, event) => event.winType === WinType.diagonalWin,
-      isTie: (context) =>
-        context.board.every((column) => column.every((space) => !!space)),
+      isHorizontalWin: (_, event) => event.winType === WinType.HoritzontalWin,
+      isVerticalWin: (_, event) => event.winType === WinType.VerticalWin,
+      isDiagonalWin: (_, event) =>
+        event.winType === WinType.TopLeftdiagonalWin ||
+        event.winType === WinType.TopRightdiagonalWin,
+      isDraw: (context) =>
+        context.totalNumOfMoves ===
+        context.board.length * context.board[0].length - 1,
       isPlayerX: (context) => context.currentPlayer === Player.x,
     },
     actions: {
@@ -191,23 +200,31 @@ const ticTacToeMachine = createMachine(
         );
       },
       resetContext: assign((_) => ({
-        board: initalBoard,
+        board: deepCopyBoard(initalBoard),
         currentPlayer: Player.x,
         beginningWinIndex: undefined,
       })),
-      checkingResult: send((context) => {
+      setBeginningWinIndex: assign({
+        beginningWinIndex: (_, event) => event.beginningWinIndex,
+      }),
+      addMoveCount: assign({
+        totalNumOfMoves: (context) => context.totalNumOfMoves + 1,
+      }),
+    },
+    services: {
+      checkingResult: (context) => (send) => {
         const result: Pick<TicTacToeMachineContext, "beginningWinIndex"> & {
-          wintype?: WinType;
-        } = { wintype: undefined, beginningWinIndex: undefined };
+          winType?: WinType;
+        } = { winType: undefined, beginningWinIndex: undefined };
 
-        const isHorizontalWin = () => {
+        const isHorizontalWin = (): boolean => {
           return context.board.some((column, index) => {
             result.beginningWinIndex = index;
             return column.every((symbol) => symbol === context.currentPlayer);
           });
         };
 
-        const isVerticalWin = () => {
+        const isVerticalWin = (): boolean => {
           return context.board[0].some((_, index) => {
             result.beginningWinIndex = index;
             return context.board.every(
@@ -216,36 +233,50 @@ const ticTacToeMachine = createMachine(
           });
         };
 
-        const isDiagonalWin = () => {
+        const diagonalWinResult = (): WinType | undefined => {
           const shallowCopyBoard = [...context.board];
-          const isLeftTopDiagonalWin = context.board.every((column, index) => {
-            result.beginningWinIndex = 0;
-            return column[index] === context.currentPlayer;
-          });
-          const isRightTopDiagonalWin = shallowCopyBoard
-            .reverse()
-            .every((column, index) => {
-              result.beginningWinIndex = context.board[0].length - 1;
-              column[index] === context.currentPlayer;
+          const isTopLeftDiagonalWin = () =>
+            context.board.every((column, index) => {
+              if (index === 0) {
+                result.beginningWinIndex = 0;
+              }
+              return column[index] === context.currentPlayer;
             });
-          return isLeftTopDiagonalWin || isRightTopDiagonalWin;
+          const isTopRightDiagonalWin = () => {
+            const lastIndexOfRow = shallowCopyBoard.length - 1;
+
+            return shallowCopyBoard.every((column, index) => {
+              if (index === 0) {
+                result.beginningWinIndex = lastIndexOfRow - index;
+              }
+              return column[lastIndexOfRow - index] === context.currentPlayer;
+            });
+          };
+
+          if (isTopLeftDiagonalWin()) {
+            return WinType.TopLeftdiagonalWin;
+          } else if (isTopRightDiagonalWin()) {
+            return WinType.TopRightdiagonalWin;
+          }
+          return undefined;
         };
 
         if (isHorizontalWin()) {
-          result.wintype = WinType.horitzontalWin;
+          result.winType = WinType.HoritzontalWin;
         } else if (isVerticalWin()) {
-          result.wintype = WinType.verticalWin;
-        } else if (isDiagonalWin()) {
-          result.wintype = WinType.diagonalWin;
+          result.winType = WinType.VerticalWin;
         } else {
-          result.beginningWinIndex = undefined;
+          const diagonalResult = diagonalWinResult();
+
+          if (diagonalResult) {
+            result.winType = diagonalResult;
+          } else {
+            result.beginningWinIndex = undefined;
+          }
         }
 
-        return { type: "CHECK_RESULT_COMPLETE", ...result };
-      }),
-      setBeginningWinIndex: assign({
-        beginningWinIndex: (_, event) => event.beginningWinIndex,
-      }),
+        send({ type: "CHECK_RESULT_COMPLETE", ...result });
+      },
     },
   }
 );
