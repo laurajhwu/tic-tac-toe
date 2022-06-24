@@ -1,7 +1,6 @@
 import { initalBoard } from "src/constants/board";
 import ticTacToeMachine from "src/modules/ticTacToe.machine";
 import { Player } from "src/types/player";
-import { deepCopyBoard } from "src/utils";
 import { interpret } from "xstate";
 //pnpm test -- ticTacToePlayer.test.ts
 
