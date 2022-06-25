@@ -15,6 +15,7 @@ describe("test turns", () => {
       guards: { hasPersistedGame: () => true },
       actions: {
         persistGame: () => {},
+        setCurrentGame: () => {},
       },
     },
     {

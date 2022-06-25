@@ -11,6 +11,7 @@ describe("board reset", () => {
     guards: { hasPersistedGame: () => true },
     actions: {
       persistGame: () => {},
+      setCurrentGame: () => {},
     },
   };
 

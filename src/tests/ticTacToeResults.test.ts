@@ -12,6 +12,7 @@ describe("test wins", () => {
     guards: { hasPersistedGame: () => true },
     actions: {
       persistGame: () => {},
+      setCurrentGame: () => {},
     },
   };
 
@@ -27,7 +28,11 @@ describe("test wins", () => {
       })
     ).onTransition((state) => {
       if (state.matches({ gameEnd: { win: "horitzontalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(0);
+        expect(state.context.winningIndicies).toEqual([
+          "(0,0)",
+          "(0,1)",
+          "(0,2)",
+        ]);
         done();
       }
     });
@@ -52,7 +57,11 @@ describe("test wins", () => {
       })
     ).onTransition((state) => {
       if (state.matches({ gameEnd: { win: "verticalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(1);
+        expect(state.context.winningIndicies).toEqual([
+          "(0,1)",
+          "(1,1)",
+          "(2,1)",
+        ]);
         done();
       }
     });
@@ -76,12 +85,12 @@ describe("test wins", () => {
         totalNumOfMoves: 4,
       })
     ).onTransition((state) => {
-      if (state.event.type === "CHECK_RESULT_COMPLETE") {
-        expect(state.event.winType === WinType.TopLeftdiagonalWin);
-      }
-
-      if (state.matches({ gameEnd: { win: "diagonalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(0);
+      if (state.matches({ gameEnd: { win: "topLeftdiagonalWin" } })) {
+        expect(state.context.winningIndicies).toEqual([
+          "(0,0)",
+          "(1,1)",
+          "(2,2)",
+        ]);
         done();
       }
     });
@@ -105,12 +114,12 @@ describe("test wins", () => {
         totalNumOfMoves: 6,
       })
     ).onTransition((state) => {
-      if (state.event.type === "CHECK_RESULT_COMPLETE") {
-        expect(state.event.winType === WinType.TopRightdiagonalWin);
-      }
-
-      if (state.matches({ gameEnd: { win: "diagonalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(2);
+      if (state.matches({ gameEnd: { win: "topRightdiagonalWin" } })) {
+        expect(state.context.winningIndicies).toEqual([
+          "(0,2)",
+          "(1,1)",
+          "(2,0)",
+        ]);
         done();
       }
     });
@@ -128,6 +137,7 @@ describe("test draw", () => {
     guards: { hasPersistedGame: () => true },
     actions: {
       persistGame: () => {},
+      setCurrentGame: () => {},
     },
   };
 
