@@ -53,11 +53,11 @@ const ticTacToeMachine = createMachine(
           {
             cond: "hasPersistedGame",
             target: "playing",
+            actions: "setBoard",
           },
           { target: "idle" },
         ],
       },
-
       idle: {
         on: {
           START_GAME: "playing",
@@ -209,6 +209,12 @@ const ticTacToeMachine = createMachine(
       }),
       addMoveCount: assign({
         totalNumOfMoves: (context) => context.totalNumOfMoves + 1,
+      }),
+      setBoard: assign({
+        board: (context) => {
+          const board = localStorage.getItem(localStorageKeys.currentBoard);
+          return board ? JSON.parse(board) : context.board;
+        },
       }),
     },
     services: {
