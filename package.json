@@ -2,16 +2,20 @@
   "name": "tic-tac-toe",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://laurajhwu.github.io/tic-tac-toe",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "jest",
     "lint": "tsc --project tsconfig.json && eslint 'src/**/*.{js,ts,tsx}'",
-    "xstate:typegen": "xstate typegen 'src/modules/**/*.machine.ts'"
+    "xstate:typegen": "xstate typegen 'src/modules/**/*.machine.ts'",
+    "predeploy": "pnpm build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@xstate/react": "^3.0.0",
+    "gh-pages": "^4.0.0",
     "global": "^4.4.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
