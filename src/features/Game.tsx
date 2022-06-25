@@ -6,6 +6,8 @@ import {
   Zoom,
   Button,
 } from "@mui/material";
+import GameEndDialog from "src/components/GameEndDialog";
+import WinResultLine from "src/components/WinResultLine";
 import { useTicTacToeActor } from "src/modules/ticTacToe.context";
 
 const Game = () => {
@@ -32,7 +34,7 @@ const Game = () => {
                 : "transparent",
           }}
         >
-          <Typography typography="h6">Player 1</Typography>
+          <Typography typography="h6">Player 1 (X)</Typography>
         </Grid>
         <Grid item>
           <Button
@@ -61,7 +63,7 @@ const Game = () => {
                 : "transparent",
           }}
         >
-          <Typography typography="h6">Player 2</Typography>
+          <Typography typography="h6">Player 2 (O)</Typography>
         </Grid>
       </Grid>
       <Grid
@@ -99,12 +101,14 @@ const Game = () => {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
-                  ...(!symbol && {
-                    ":hover": {
-                      cursor: "pointer",
-                      bgcolor: colors.purple[200],
-                    },
-                  }),
+                  position: "relative",
+                  ...(!symbol &&
+                    !ticTacToeState.matches("gameEnd") && {
+                      ":hover": {
+                        cursor: "pointer",
+                        bgcolor: colors.purple[200],
+                      },
+                    }),
                 }}
                 onClick={() => {
                   ticTacToeSend({
@@ -114,6 +118,9 @@ const Game = () => {
                   });
                 }}
               >
+                {ticTacToeState.context.winningIndicies?.includes(
+                  `(${rowIndex},${columnIndex})`
+                ) && <WinResultLine />}
                 <Zoom in={!!symbol}>
                   <Typography variant="h1">{symbol}</Typography>
                 </Zoom>
@@ -122,6 +129,7 @@ const Game = () => {
           </Grid>
         ))}
       </Grid>
+      <GameEndDialog />
     </Container>
   );
 };

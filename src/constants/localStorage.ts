@@ -1,3 +1,3 @@
 export const localStorageKeys = {
-  currentBoard: "currentBoard",
+  currentGame: "currentGame",
 };
