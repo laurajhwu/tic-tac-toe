@@ -47,12 +47,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm i
+      - name: Generate XState typegen
+        run: pnpm xstate:typegen
 
       - run: pnpm test
 
       - run: pnpm run build
-      
+
       - name: Deploy
         run: |
           git config --global user.name $user_name

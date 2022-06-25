@@ -50,7 +50,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm i
+      - name: Generate XState typegen
+        run: pnpm xstate:typegen
 
       - run: pnpm test
 
