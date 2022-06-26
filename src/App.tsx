@@ -1,7 +1,4 @@
-import {
-  TicTacToeProvider,
-  useTicTacToeActor,
-} from "src/modules/ticTacToe.context";
+import { TicTacToeProvider } from "src/modules/ticTacToe.context";
 import { MainContent } from "src/features";
 import { Layout } from "./layouts";
 import { Global, css } from "@emotion/react";
