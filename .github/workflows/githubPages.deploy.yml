@@ -58,5 +58,5 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.3.3
         with:
           branch: master # The branch the action should deploy to.
-          folder: build # The folder the action should deploy.
+          folder: dist # The folder the action should deploy.
           github_token: ${{ secrets.ACTIONS_DEPLOY_ACCESS_TOKEN }}
