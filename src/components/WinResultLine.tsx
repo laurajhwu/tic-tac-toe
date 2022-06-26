@@ -1,6 +1,6 @@
-import { useTicTacToeActor } from "src/modules/ticTacToe.context";
 import { match } from "ts-pattern";
 import { colors, Divider as _Divider, styled } from "@mui/material";
+import { WinType } from "src/types/game";
 
 const Divider = styled(_Divider)({
   position: "absolute",
@@ -10,46 +10,36 @@ const Divider = styled(_Divider)({
   backgroundColor: colors.pink[900],
 });
 
-const WinResultLine = () => {
-  const [ticTacToeState] = useTicTacToeActor();
+interface WinResultLineProps {
+  winType: WinType;
+}
 
-  return match(ticTacToeState)
-    .when(
-      (state) => state.matches({ gameEnd: { win: "horitzontalWin" } }),
-      () => (
-        <Divider
-          sx={{
-            width: "105%",
-          }}
-        />
-      )
-    )
-    .when(
-      (state) => state.matches({ gameEnd: { win: "verticalWin" } }),
-      () => <Divider orientation="vertical" />
-    )
-    .when(
-      (state) => state.matches({ gameEnd: { win: "topRightdiagonalWin" } }),
-      () => (
-        <Divider
-          sx={{
-            transform: "rotate(43.9deg)",
-            height: "145%",
-          }}
-        />
-      )
-    )
-    .when(
-      (state) => state.matches({ gameEnd: { win: "topLeftdiagonalWin" } }),
-      () => (
-        <Divider
-          sx={{
-            transform: "rotate(-43.9deg)",
-            height: "145%",
-          }}
-        />
-      )
-    )
+const WinResultLine: React.FC<WinResultLineProps> = ({ winType }) => {
+  return match(winType)
+    .with(WinType.HoritzontalWin, () => (
+      <Divider
+        sx={{
+          width: "105%",
+        }}
+      />
+    ))
+    .with(WinType.VerticalWin, () => <Divider orientation="vertical" />)
+    .with(WinType.TopRightdiagonalWin, () => (
+      <Divider
+        sx={{
+          transform: "rotate(43.9deg)",
+          height: "145%",
+        }}
+      />
+    ))
+    .with(WinType.TopLeftdiagonalWin, () => (
+      <Divider
+        sx={{
+          transform: "rotate(-43.9deg)",
+          height: "145%",
+        }}
+      />
+    ))
     .otherwise(() => null);
 };
 
