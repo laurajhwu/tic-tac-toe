@@ -26,8 +26,8 @@ describe("test wins", () => {
         totalNumOfMoves: 2,
       })
     ).onTransition((state) => {
-      if (state.matches({ gameEnd: { win: "horitzontalWin" } })) {
-        expect(state.context.winningIndicies).toEqual([
+      if (state.matches({ gameEnd: "win" })) {
+        expect(state.context.wins?.horitzontalWin).toEqual([
           "(0,0)",
           "(0,1)",
           "(0,2)",
@@ -55,8 +55,8 @@ describe("test wins", () => {
         totalNumOfMoves: 4,
       })
     ).onTransition((state) => {
-      if (state.matches({ gameEnd: { win: "verticalWin" } })) {
-        expect(state.context.winningIndicies).toEqual([
+      if (state.matches({ gameEnd: "win" })) {
+        expect(state.context.wins?.verticalWin).toEqual([
           "(0,1)",
           "(1,1)",
           "(2,1)",
@@ -84,8 +84,8 @@ describe("test wins", () => {
         totalNumOfMoves: 4,
       })
     ).onTransition((state) => {
-      if (state.matches({ gameEnd: { win: "topLeftdiagonalWin" } })) {
-        expect(state.context.winningIndicies).toEqual([
+      if (state.matches({ gameEnd: "win" })) {
+        expect(state.context.wins?.topLeftdiagonalWin).toEqual([
           "(0,0)",
           "(1,1)",
           "(2,2)",
@@ -113,8 +113,8 @@ describe("test wins", () => {
         totalNumOfMoves: 6,
       })
     ).onTransition((state) => {
-      if (state.matches({ gameEnd: { win: "topRightdiagonalWin" } })) {
-        expect(state.context.winningIndicies).toEqual([
+      if (state.matches({ gameEnd: "win" })) {
+        expect(state.context.wins?.topRightdiagonalWin).toEqual([
           "(0,2)",
           "(1,1)",
           "(2,0)",

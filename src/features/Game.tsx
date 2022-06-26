@@ -9,6 +9,7 @@ import {
 import GameEndDialog from "src/components/GameEndDialog";
 import WinResultLine from "src/components/WinResultLine";
 import { useTicTacToeActor } from "src/modules/ticTacToe.context";
+import { WinType } from "src/types/game";
 import { Mode } from "src/types/player";
 import { match } from "ts-pattern";
 
@@ -139,9 +140,13 @@ const Game = () => {
                 }}
                 data-testid="boardSpace"
               >
-                {ticTacToeState.context.winningIndicies?.includes(
-                  `(${rowIndex},${columnIndex})`
-                ) && <WinResultLine />}
+                {ticTacToeState.context.wins &&
+                  Object.entries(ticTacToeState.context.wins).map(
+                    ([winType, indicies]) =>
+                      indicies.includes(`(${rowIndex},${columnIndex})`) && (
+                        <WinResultLine winType={winType as WinType} />
+                      )
+                  )}
                 <Zoom in={!!symbol}>
                   <Typography variant="h1">{symbol}</Typography>
                 </Zoom>

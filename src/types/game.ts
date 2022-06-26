@@ -1,6 +1,6 @@
 export enum WinType {
   HoritzontalWin = "horitzontalWin",
   VerticalWin = "verticalWin",
-  TopLeftdiagonalWin = "TopLeftdiagonalWin",
-  TopRightdiagonalWin = "TopRightdiagonalWin",
+  TopLeftdiagonalWin = "topLeftdiagonalWin",
+  TopRightdiagonalWin = "topRightdiagonalWin",
 }
