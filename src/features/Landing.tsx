@@ -49,6 +49,7 @@ const Landing = () => {
                 playerMode: Mode.PvP,
               });
             }}
+            data-testid="selectPvP"
           >
             Player vs Player
           </Button>
