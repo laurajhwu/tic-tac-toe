@@ -1,8 +1,9 @@
-import { Button, Container, Typography } from "@mui/material";
+import { Button, Container, Typography, Grid } from "@mui/material";
 import { useTicTacToeActor } from "src/modules/ticTacToe.context";
+import { Mode } from "src/types/player";
 
 const Landing = () => {
-  const [_, ticTacToeSend] = useTicTacToeActor();
+  const [ticTacToeState, ticTacToeSend] = useTicTacToeActor();
 
   return (
     <Container
@@ -24,6 +25,55 @@ const Landing = () => {
       >
         TIC-TAC-TOE
       </Typography>
+      <Typography
+        variant="h6"
+        sx={{
+          mb: 1,
+        }}
+      >
+        SELECT PLAYER MODE
+      </Typography>
+      <Grid container justifyContent="space-evenly" sx={{ mb: 10 }}>
+        <Grid item>
+          <Button
+            variant={
+              ticTacToeState.context.playerMode === Mode.PvP
+                ? "contained"
+                : "outlined"
+            }
+            color="primary"
+            size="large"
+            onClick={() => {
+              ticTacToeSend({
+                type: "SELECT_PLAYER_MODE",
+                playerMode: Mode.PvP,
+              });
+            }}
+            data-testid="selectPvP"
+          >
+            Player vs Player
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button
+            variant={
+              ticTacToeState.context.playerMode === Mode.PvC
+                ? "contained"
+                : "outlined"
+            }
+            color="primary"
+            size="large"
+            onClick={() => {
+              ticTacToeSend({
+                type: "SELECT_PLAYER_MODE",
+                playerMode: Mode.PvC,
+              });
+            }}
+          >
+            Player vs Computer
+          </Button>
+        </Grid>
+      </Grid>
       <Button
         variant="contained"
         color="secondary"
@@ -35,6 +85,7 @@ const Landing = () => {
           height: 50,
           fontSize: (theme) => theme.typography.h5,
         }}
+        disabled={!ticTacToeState.context.playerMode}
         data-testid="startButton"
       >
         START GAME

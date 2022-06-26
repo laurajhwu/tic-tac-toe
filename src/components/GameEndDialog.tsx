@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTicTacToeActor } from "src/modules/ticTacToe.context";
-import { Player } from "src/types/player";
+import { Mode, Player } from "src/types/player";
 import { match } from "ts-pattern";
 
 const GameEndDialog = () => {
@@ -23,8 +23,16 @@ const GameEndDialog = () => {
         <Typography variant="h3">
           {ticTacToeState.matches({ gameEnd: "win" }) &&
             match(ticTacToeState.context.currentPlayer)
-              .with(Player.x, () => "Player 1 Wins!")
-              .with(Player.o, () => "Player 2 Wins!")
+              .with(Player.x, () =>
+                ticTacToeState.context.playerMode === Mode.PvP
+                  ? "Player 1 Wins!"
+                  : "You Win!"
+              )
+              .with(Player.o, () =>
+                ticTacToeState.context.playerMode === Mode.PvP
+                  ? "Player 2 Wins!"
+                  : "You Lose"
+              )
               .exhaustive()}
           {ticTacToeState.matches({ gameEnd: "draw" }) && "It's a Draw!"}
         </Typography>

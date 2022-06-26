@@ -1,5 +1,5 @@
 import { assign, createMachine, send } from "xstate";
-import { Player } from "src/types/player";
+import { Player, Mode } from "src/types/player";
 import { Board } from "src/types/board";
 import { WinType } from "src/types/game";
 import { initalBoard } from "src/constants/board";
@@ -12,6 +12,7 @@ interface TicTacToeMachineContext {
   //['(rowIndex)','(columnIndex)']
   winningIndicies?: string[];
   totalNumOfMoves: number;
+  playerMode?: Mode;
 }
 
 type MoveEvent = { type: "MOVE"; row: number; column: number };
@@ -22,11 +23,13 @@ type CheckResultCompleteEvent = {
   winningIndicies?: string[];
 };
 type ResetGameEvent = { type: "RESET_GAME" };
+type SelectPlayerModeEvent = { type: "SELECT_PLAYER_MODE"; playerMode: Mode };
 type TicTacToeMachineEvent =
   | MoveEvent
   | StartGameEvent
   | CheckResultCompleteEvent
-  | ResetGameEvent;
+  | ResetGameEvent
+  | SelectPlayerModeEvent;
 
 const ticTacToeMachine = createMachine(
   {
@@ -62,6 +65,7 @@ const ticTacToeMachine = createMachine(
       idle: {
         on: {
           START_GAME: "playing",
+          SELECT_PLAYER_MODE: { actions: "setPlayerMode" },
         },
       },
       playing: {
@@ -82,16 +86,43 @@ const ticTacToeMachine = createMachine(
             },
           },
           circlePlaying: {
-            on: {
-              MOVE: {
-                cond: "isEmptySlot",
-                actions: [
-                  "setCircleOnBoard",
-                  "setCurrentPlayerCircle",
-                  "persistGame",
-                  "addMoveCount",
+            initial: "checkPlayerMode",
+            states: {
+              checkPlayerMode: {
+                always: [
+                  {
+                    cond: "isPvC",
+                    target: "#ticTacToe.playing.circlePlaying.modePvC",
+                  },
+                  { target: "#ticTacToe.playing.circlePlaying.idle" },
                 ],
-                target: "#ticTacToe.playing.checkMoveResult",
+              },
+              idle: {
+                on: {
+                  MOVE: {
+                    cond: "isEmptySlot",
+                    actions: [
+                      "setCircleOnBoard",
+                      "setCurrentPlayerCircle",
+                      "persistGame",
+                      "addMoveCount",
+                    ],
+                    target: "#ticTacToe.playing.checkMoveResult",
+                  },
+                },
+              },
+              modePvC: {
+                after: {
+                  PC_DELAY: {
+                    actions: [
+                      "setCurrentPlayerCircle",
+                      "makeRandomMove",
+                      "persistGame",
+                      "addMoveCount",
+                    ],
+                    target: "#ticTacToe.playing.checkMoveResult",
+                  },
+                },
               },
             },
           },
@@ -153,6 +184,9 @@ const ticTacToeMachine = createMachine(
     },
   },
   {
+    delays: {
+      PC_DELAY: 500,
+    },
     guards: {
       hasPersistedGame: (_) =>
         !!localStorage.getItem(localStorageKeys.currentGame),
@@ -167,6 +201,7 @@ const ticTacToeMachine = createMachine(
         context.totalNumOfMoves ===
         context.board.length * context.board[0].length,
       isPlayerX: (context) => context.currentPlayer === Player.x,
+      isPvC: (context) => context.playerMode === Mode.PvC,
     },
     actions: {
       setXOnBoard: assign({
@@ -189,6 +224,35 @@ const ticTacToeMachine = createMachine(
           return copyOfBoard;
         },
       }),
+      makeRandomMove: assign({
+        board: (context) => {
+          const copyBoard = deepCopyBoard(context.board);
+          const emptySlots = copyBoard.reduce(
+            (slots, column, rowIndex) => [
+              ...slots,
+              ...column.map((symbol, columnIndex) =>
+                symbol ? "" : [rowIndex, columnIndex]
+              ),
+            ],
+            [] as (string | number[])[]
+          );
+          const filteredEmptySlots = emptySlots.filter((slots) => !!slots);
+
+          const randomIndex = Math.floor(
+            Math.random() * filteredEmptySlots.length
+          );
+          const computerMovePosition = filteredEmptySlots[
+            randomIndex
+          ] as number[];
+
+          console.log(randomIndex);
+
+          copyBoard[computerMovePosition[0]][computerMovePosition[1]] =
+            context.currentPlayer;
+
+          return copyBoard;
+        },
+      }),
       setCurrentPlayerX: assign({
         currentPlayer: (_) => Player.x,
       }),
@@ -202,6 +266,7 @@ const ticTacToeMachine = createMachine(
             board: context.board,
             currentPlayer: context.currentPlayer,
             totalNumOfMoves: context.totalNumOfMoves,
+            playerMode: context.playerMode,
           })
         );
       },
@@ -213,6 +278,7 @@ const ticTacToeMachine = createMachine(
         currentPlayer: Player.x,
         winningIndicies: undefined,
         totalNumOfMoves: 0,
+        playerMode: undefined,
       })),
       setWinningIndicies: assign({
         winningIndicies: (_, event) => event.winningIndicies,
@@ -226,12 +292,16 @@ const ticTacToeMachine = createMachine(
         );
 
         return game
-          ? {
+          ? ({
               board: game.board,
               currentPlayer: game.currentPlayer,
               totalNumOfMoves: game.totalNumOfMoves,
-            }
+              playerMode: game.playerMode,
+            } as TicTacToeMachineContext)
           : {};
+      }),
+      setPlayerMode: assign({
+        playerMode: (_, event) => event.playerMode,
       }),
     },
     services: {

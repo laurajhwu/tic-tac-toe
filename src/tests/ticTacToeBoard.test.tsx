@@ -83,9 +83,11 @@ describe("test ui", () => {
         <MainContent />
       </TicTacToeProvider>
     );
-    userEvent.click(screen.getByTestId("startButton")).then(() => {
-      expect(screen.getAllByTestId("landingPage")).toHaveLength(0);
-      expect(screen.getAllByTestId("gamePage")).toHaveLength(1);
+    userEvent.click(screen.getByTestId("selectPvP")).then(() => {
+      userEvent.click(screen.getByTestId("startButton")).then(() => {
+        expect(screen.getAllByTestId("landingPage")).toHaveLength(0);
+        expect(screen.getAllByTestId("gamePage")).toHaveLength(1);
+      });
     });
   });
 
@@ -95,10 +97,12 @@ describe("test ui", () => {
         <MainContent />
       </TicTacToeProvider>
     );
-    userEvent.click(screen.getByTestId("startButton")).then(() => {
-      userEvent.click(screen.getByTestId("resetButton")).then(() => {
-        expect(screen.getAllByTestId("gamePage")).toHaveLength(0);
-        expect(screen.getAllByTestId("landingPage")).toHaveLength(1);
+    userEvent.click(screen.getByTestId("selectPvP")).then(() => {
+      userEvent.click(screen.getByTestId("startButton")).then(() => {
+        userEvent.click(screen.getByTestId("resetButton")).then(() => {
+          expect(screen.getAllByTestId("gamePage")).toHaveLength(0);
+          expect(screen.getAllByTestId("landingPage")).toHaveLength(1);
+        });
       });
     });
   });
