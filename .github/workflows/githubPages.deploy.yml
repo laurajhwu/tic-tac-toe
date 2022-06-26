@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-   strategy:
+    strategy:
       matrix:
         node-version: [16.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
