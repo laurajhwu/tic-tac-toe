@@ -140,18 +140,18 @@ describe("test draw", () => {
     },
   };
 
-  it("should return final state of 'gameEnd.draw' when PlayerX makes the 8th total Move", (done) => {
+  it("should return final state of 'gameEnd.draw' when PlayerX makes the last total Move", (done) => {
     const board = [
       ["", Player.o, Player.x],
+      [Player.x, Player.x, Player.o],
       [Player.o, Player.x, Player.o],
-      [Player.o, Player.x, ""],
     ];
 
     const service = interpret(
       ticTacToeMachine.withConfig(defaultConfig, {
         board,
         currentPlayer: Player.x,
-        totalNumOfMoves: 7,
+        totalNumOfMoves: 8,
       })
     ).onTransition((state) => {
       if (state.matches({ gameEnd: "draw" })) {

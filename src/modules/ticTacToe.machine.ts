@@ -165,7 +165,7 @@ const ticTacToeMachine = createMachine(
         event.winType === WinType.TopRightdiagonalWin,
       isDraw: (context) =>
         context.totalNumOfMoves ===
-        context.board.length * context.board[0].length - 1,
+        context.board.length * context.board[0].length,
       isPlayerX: (context) => context.currentPlayer === Player.x,
     },
     actions: {
