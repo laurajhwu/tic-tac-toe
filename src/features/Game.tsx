@@ -17,6 +17,7 @@ const Game = () => {
       sx={{
         p: 4,
       }}
+      data-testid="gamePage"
     >
       <Grid container justifyContent="space-between" sx={{ pt: 10 }}>
         <Grid
@@ -44,6 +45,7 @@ const Game = () => {
             onClick={() => {
               ticTacToeSend("RESET_GAME");
             }}
+            data-testid="resetButton"
           >
             RESET
           </Button>
@@ -117,6 +119,7 @@ const Game = () => {
                     column: columnIndex,
                   });
                 }}
+                data-testid="boardSpace"
               >
                 {ticTacToeState.context.winningIndicies?.includes(
                   `(${rowIndex},${columnIndex})`

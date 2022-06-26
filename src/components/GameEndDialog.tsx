@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { Dialog, DialogContent, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTicTacToeActor } from "src/modules/ticTacToe.context";
 import { Player } from "src/types/player";

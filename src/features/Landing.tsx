@@ -14,6 +14,7 @@ const Landing = () => {
         height: "100%",
         flexDirection: "column",
       }}
+      data-testid="landingPage"
     >
       <Typography
         variant="h1"
@@ -34,6 +35,7 @@ const Landing = () => {
           height: 50,
           fontSize: (theme) => theme.typography.h5,
         }}
+        data-testid="startButton"
       >
         START GAME
       </Button>

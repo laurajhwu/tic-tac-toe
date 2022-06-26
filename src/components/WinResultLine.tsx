@@ -12,7 +12,6 @@ const Divider = styled(_Divider)({
 
 const WinResultLine = () => {
   const [ticTacToeState] = useTicTacToeActor();
-  console.log(ticTacToeState.value);
 
   return match(ticTacToeState)
     .when(

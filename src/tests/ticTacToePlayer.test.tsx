@@ -3,6 +3,10 @@ import ticTacToeMachine from "src/modules/ticTacToe.machine";
 import { Player } from "src/types/player";
 import { deepCopyBoard } from "src/utils";
 import { interpret } from "xstate";
+import { screen, render } from "@testing-library/react";
+import Game from "src/features/Game";
+import userEvent from "@testing-library/user-event";
+import { TicTacToeProvider } from "src/modules/ticTacToe.context";
 //pnpm test -- ticTacToePlayer.test.ts
 
 describe("test turns", () => {
@@ -51,5 +55,19 @@ describe("test turns", () => {
     service.start();
 
     service.send({ type: "MOVE", row: 1, column: 1 });
+  });
+});
+
+describe("test ui", () => {
+  it("should display 'x' when player clicks empty space on the board", () => {
+    render(
+      <TicTacToeProvider>
+        <Game />
+      </TicTacToeProvider>
+    );
+
+    userEvent.click(screen.getAllByTestId("boardSpace")[0]).then(() => {
+      expect(screen.getAllByTestId("boardSpace")[0].innerText).toBe("x");
+    });
   });
 });

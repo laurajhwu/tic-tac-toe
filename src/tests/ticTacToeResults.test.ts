@@ -1,4 +1,3 @@
-import { WinType } from "src/types/game";
 import { interpret } from "xstate";
 import { initalBoard } from "../constants/board";
 import ticTacToeMachine from "../modules/ticTacToe.machine";
@@ -37,7 +36,7 @@ describe("test wins", () => {
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 0, column: 0 });
   });
@@ -66,7 +65,7 @@ describe("test wins", () => {
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 1, column: 1 });
   });
@@ -95,7 +94,7 @@ describe("test wins", () => {
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 2, column: 2 });
   });
@@ -124,7 +123,7 @@ describe("test wins", () => {
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 2, column: 0 });
   });
@@ -160,7 +159,7 @@ describe("test draw", () => {
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 0, column: 0 });
   });
