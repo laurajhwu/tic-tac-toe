@@ -1,4 +1,3 @@
-import { WinType } from "src/types/game";
 import { interpret } from "xstate";
 import { initalBoard } from "../constants/board";
 import ticTacToeMachine from "../modules/ticTacToe.machine";
@@ -12,6 +11,7 @@ describe("test wins", () => {
     guards: { hasPersistedGame: () => true },
     actions: {
       persistGame: () => {},
+      setCurrentGame: () => {},
     },
   };
 
@@ -27,12 +27,16 @@ describe("test wins", () => {
       })
     ).onTransition((state) => {
       if (state.matches({ gameEnd: { win: "horitzontalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(0);
+        expect(state.context.winningIndicies).toEqual([
+          "(0,0)",
+          "(0,1)",
+          "(0,2)",
+        ]);
         done();
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 0, column: 0 });
   });
@@ -52,12 +56,16 @@ describe("test wins", () => {
       })
     ).onTransition((state) => {
       if (state.matches({ gameEnd: { win: "verticalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(1);
+        expect(state.context.winningIndicies).toEqual([
+          "(0,1)",
+          "(1,1)",
+          "(2,1)",
+        ]);
         done();
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 1, column: 1 });
   });
@@ -76,17 +84,17 @@ describe("test wins", () => {
         totalNumOfMoves: 4,
       })
     ).onTransition((state) => {
-      if (state.event.type === "CHECK_RESULT_COMPLETE") {
-        expect(state.event.winType === WinType.TopLeftdiagonalWin);
-      }
-
-      if (state.matches({ gameEnd: { win: "diagonalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(0);
+      if (state.matches({ gameEnd: { win: "topLeftdiagonalWin" } })) {
+        expect(state.context.winningIndicies).toEqual([
+          "(0,0)",
+          "(1,1)",
+          "(2,2)",
+        ]);
         done();
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 2, column: 2 });
   });
@@ -105,17 +113,17 @@ describe("test wins", () => {
         totalNumOfMoves: 6,
       })
     ).onTransition((state) => {
-      if (state.event.type === "CHECK_RESULT_COMPLETE") {
-        expect(state.event.winType === WinType.TopRightdiagonalWin);
-      }
-
-      if (state.matches({ gameEnd: { win: "diagonalWin" } })) {
-        expect(state.context.beginningWinIndex).toBe(2);
+      if (state.matches({ gameEnd: { win: "topRightdiagonalWin" } })) {
+        expect(state.context.winningIndicies).toEqual([
+          "(0,2)",
+          "(1,1)",
+          "(2,0)",
+        ]);
         done();
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 2, column: 0 });
   });
@@ -128,21 +136,22 @@ describe("test draw", () => {
     guards: { hasPersistedGame: () => true },
     actions: {
       persistGame: () => {},
+      setCurrentGame: () => {},
     },
   };
 
-  it("should return final state of 'gameEnd.draw' when PlayerX makes the 8th total Move", (done) => {
+  it("should return final state of 'gameEnd.draw' when PlayerX makes the last total Move", (done) => {
     const board = [
       ["", Player.o, Player.x],
+      [Player.x, Player.x, Player.o],
       [Player.o, Player.x, Player.o],
-      [Player.o, Player.x, ""],
     ];
 
     const service = interpret(
       ticTacToeMachine.withConfig(defaultConfig, {
         board,
         currentPlayer: Player.x,
-        totalNumOfMoves: 7,
+        totalNumOfMoves: 8,
       })
     ).onTransition((state) => {
       if (state.matches({ gameEnd: "draw" })) {
@@ -150,7 +159,7 @@ describe("test draw", () => {
       }
     });
 
-    service.start();
+    service.start({ playing: "xPlaying" });
 
     service.send({ type: "MOVE", row: 0, column: 0 });
   });

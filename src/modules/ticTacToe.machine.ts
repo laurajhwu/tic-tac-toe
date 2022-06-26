@@ -9,7 +9,8 @@ import { deepCopyBoard } from "src/utils";
 interface TicTacToeMachineContext {
   board: Board;
   currentPlayer: Player;
-  beginningWinIndex?: number;
+  //['(rowIndex)','(columnIndex)']
+  winningIndicies?: string[];
   totalNumOfMoves: number;
 }
 
@@ -18,7 +19,7 @@ type StartGameEvent = { type: "START_GAME" };
 type CheckResultCompleteEvent = {
   type: "CHECK_RESULT_COMPLETE";
   winType?: WinType;
-  beginningWinIndex?: number;
+  winningIndicies?: string[];
 };
 type ResetGameEvent = { type: "RESET_GAME" };
 type TicTacToeMachineEvent =
@@ -43,7 +44,7 @@ const ticTacToeMachine = createMachine(
     },
     on: {
       RESET_GAME: {
-        actions: "resetContext",
+        actions: ["resetContext", "clearPersistedGame"],
         target: "idle",
       },
     },
@@ -52,36 +53,30 @@ const ticTacToeMachine = createMachine(
         always: [
           {
             cond: "hasPersistedGame",
-            target: "playing",
+            target: "#ticTacToe.playing.checkMoveResult",
+            actions: "setCurrentGame",
           },
           { target: "idle" },
         ],
       },
-
       idle: {
         on: {
           START_GAME: "playing",
         },
       },
       playing: {
-        initial: "checkPlayer",
+        initial: "xPlaying",
         states: {
-          checkPlayer: {
-            always: [
-              {
-                cond: "isPlayerX",
-                target: "#ticTacToe.playing.xPlaying",
-              },
-              {
-                target: "#ticTacToe.playing.circlePlaying",
-              },
-            ],
-          },
           xPlaying: {
             on: {
               MOVE: {
                 cond: "isEmptySlot",
-                actions: ["setXOnBoard", "setCurrentPlayerX", "persistGame"],
+                actions: [
+                  "setXOnBoard",
+                  "setCurrentPlayerX",
+                  "persistGame",
+                  "addMoveCount",
+                ],
                 target: "#ticTacToe.playing.checkMoveResult",
               },
             },
@@ -94,13 +89,13 @@ const ticTacToeMachine = createMachine(
                   "setCircleOnBoard",
                   "setCurrentPlayerCircle",
                   "persistGame",
+                  "addMoveCount",
                 ],
                 target: "#ticTacToe.playing.checkMoveResult",
               },
             },
           },
           checkMoveResult: {
-            entry: "addMoveCount",
             invoke: {
               src: "checkingResult",
             },
@@ -109,17 +104,22 @@ const ticTacToeMachine = createMachine(
                 {
                   cond: "isHorizontalWin",
                   target: "#ticTacToe.gameEnd.win.horitzontalWin",
-                  actions: "setBeginningWinIndex",
+                  actions: "setWinningIndicies",
                 },
                 {
                   cond: "isVerticalWin",
                   target: "#ticTacToe.gameEnd.win.verticalWin",
-                  actions: "setBeginningWinIndex",
+                  actions: "setWinningIndicies",
                 },
                 {
-                  cond: "isDiagonalWin",
-                  target: "#ticTacToe.gameEnd.win.diagonalWin",
-                  actions: "setBeginningWinIndex",
+                  cond: "isTopLeftdiagonalWin",
+                  target: "#ticTacToe.gameEnd.win.topLeftdiagonalWin",
+                  actions: "setWinningIndicies",
+                },
+                {
+                  cond: "isTopRightdiagonalWin",
+                  target: "#ticTacToe.gameEnd.win.topRightdiagonalWin",
+                  actions: "setWinningIndicies",
                 },
                 {
                   cond: "isDraw",
@@ -143,7 +143,8 @@ const ticTacToeMachine = createMachine(
             states: {
               horitzontalWin: { type: "final" },
               verticalWin: { type: "final" },
-              diagonalWin: { type: "final" },
+              topRightdiagonalWin: { type: "final" },
+              topLeftdiagonalWin: { type: "final" },
             },
           },
           draw: { type: "final" },
@@ -154,16 +155,17 @@ const ticTacToeMachine = createMachine(
   {
     guards: {
       hasPersistedGame: (_) =>
-        !!localStorage.getItem(localStorageKeys.currentBoard),
+        !!localStorage.getItem(localStorageKeys.currentGame),
       isEmptySlot: (context, event) => !context.board[event.row][event.column],
       isHorizontalWin: (_, event) => event.winType === WinType.HoritzontalWin,
       isVerticalWin: (_, event) => event.winType === WinType.VerticalWin,
-      isDiagonalWin: (_, event) =>
-        event.winType === WinType.TopLeftdiagonalWin ||
+      isTopLeftdiagonalWin: (_, event) =>
+        event.winType === WinType.TopLeftdiagonalWin,
+      isTopRightdiagonalWin: (_, event) =>
         event.winType === WinType.TopRightdiagonalWin,
       isDraw: (context) =>
         context.totalNumOfMoves ===
-        context.board.length * context.board[0].length - 1,
+        context.board.length * context.board[0].length,
       isPlayerX: (context) => context.currentPlayer === Player.x,
     },
     actions: {
@@ -195,61 +197,87 @@ const ticTacToeMachine = createMachine(
       }),
       persistGame: (context) => {
         localStorage.setItem(
-          localStorageKeys.currentBoard,
-          JSON.stringify(context.board)
+          localStorageKeys.currentGame,
+          JSON.stringify({
+            board: context.board,
+            currentPlayer: context.currentPlayer,
+            totalNumOfMoves: context.totalNumOfMoves,
+          })
         );
+      },
+      clearPersistedGame: () => {
+        localStorage.removeItem(localStorageKeys.currentGame);
       },
       resetContext: assign((_) => ({
         board: deepCopyBoard(initalBoard),
         currentPlayer: Player.x,
-        beginningWinIndex: undefined,
+        winningIndicies: undefined,
+        totalNumOfMoves: 0,
       })),
-      setBeginningWinIndex: assign({
-        beginningWinIndex: (_, event) => event.beginningWinIndex,
+      setWinningIndicies: assign({
+        winningIndicies: (_, event) => event.winningIndicies,
       }),
       addMoveCount: assign({
         totalNumOfMoves: (context) => context.totalNumOfMoves + 1,
       }),
+      setCurrentGame: assign(() => {
+        const game = JSON.parse(
+          localStorage.getItem(localStorageKeys.currentGame) || ""
+        );
+
+        return game
+          ? {
+              board: game.board,
+              currentPlayer: game.currentPlayer,
+              totalNumOfMoves: game.totalNumOfMoves,
+            }
+          : {};
+      }),
     },
     services: {
       checkingResult: (context) => (send) => {
-        const result: Pick<TicTacToeMachineContext, "beginningWinIndex"> & {
+        const result: Pick<TicTacToeMachineContext, "winningIndicies"> & {
           winType?: WinType;
-        } = { winType: undefined, beginningWinIndex: undefined };
+        } = { winType: undefined, winningIndicies: undefined };
 
         const isHorizontalWin = (): boolean => {
-          return context.board.some((column, index) => {
-            result.beginningWinIndex = index;
-            return column.every((symbol) => symbol === context.currentPlayer);
+          return context.board.some((column, rowIndex) => {
+            result.winningIndicies = [];
+            return column.every((symbol, columnIndex) => {
+              result.winningIndicies?.push(`(${rowIndex},${columnIndex})`);
+              return symbol === context.currentPlayer;
+            });
           });
         };
 
         const isVerticalWin = (): boolean => {
-          return context.board[0].some((_, index) => {
-            result.beginningWinIndex = index;
-            return context.board.every(
-              (column) => column[index] === context.currentPlayer
-            );
+          return context.board[0].some((_, columnIndex) => {
+            result.winningIndicies = [];
+            return context.board.every((column, rowIndex) => {
+              result.winningIndicies?.push(`(${rowIndex},${columnIndex})`);
+              return column[columnIndex] === context.currentPlayer;
+            });
           });
         };
 
         const diagonalWinResult = (): WinType | undefined => {
           const shallowCopyBoard = [...context.board];
-          const isTopLeftDiagonalWin = () =>
-            context.board.every((column, index) => {
-              if (index === 0) {
-                result.beginningWinIndex = 0;
-              }
+
+          const isTopLeftDiagonalWin = () => {
+            result.winningIndicies = [];
+            return context.board.every((column, index) => {
+              result.winningIndicies?.push(`(${index},${index})`);
               return column[index] === context.currentPlayer;
             });
+          };
+
           const isTopRightDiagonalWin = () => {
             const lastIndexOfRow = shallowCopyBoard.length - 1;
-
-            return shallowCopyBoard.every((column, index) => {
-              if (index === 0) {
-                result.beginningWinIndex = lastIndexOfRow - index;
-              }
-              return column[lastIndexOfRow - index] === context.currentPlayer;
+            result.winningIndicies = [];
+            return shallowCopyBoard.every((column, rowIndex) => {
+              const columnIndex = lastIndexOfRow - rowIndex;
+              result.winningIndicies?.push(`(${rowIndex},${columnIndex})`);
+              return column[columnIndex] === context.currentPlayer;
             });
           };
 
@@ -271,7 +299,7 @@ const ticTacToeMachine = createMachine(
           if (diagonalResult) {
             result.winType = diagonalResult;
           } else {
-            result.beginningWinIndex = undefined;
+            result.winningIndicies = undefined;
           }
         }
 
