@@ -9,6 +9,8 @@ import {
 import GameEndDialog from "src/components/GameEndDialog";
 import WinResultLine from "src/components/WinResultLine";
 import { useTicTacToeActor } from "src/modules/ticTacToe.context";
+import { Mode } from "src/types/player";
+import { match } from "ts-pattern";
 
 const Game = () => {
   const [ticTacToeState, ticTacToeSend] = useTicTacToeActor();
@@ -35,7 +37,13 @@ const Game = () => {
                 : "transparent",
           }}
         >
-          <Typography typography="h6">Player 1 (X)</Typography>
+          <Typography typography="h6">
+            {ticTacToeState.context.playerMode &&
+              match(ticTacToeState.context.playerMode)
+                .with(Mode.PvP, () => "Player 1 (X)")
+                .with(Mode.PvC, () => "You (X)")
+                .exhaustive()}
+          </Typography>
         </Grid>
         <Grid item>
           <Button
@@ -65,7 +73,13 @@ const Game = () => {
                 : "transparent",
           }}
         >
-          <Typography typography="h6">Player 2 (O)</Typography>
+          <Typography typography="h6">
+            {ticTacToeState.context.playerMode &&
+              match(ticTacToeState.context.playerMode)
+                .with(Mode.PvP, () => "Player 2 (O)")
+                .with(Mode.PvC, () => "Computer (O)")
+                .exhaustive()}
+          </Typography>
         </Grid>
       </Grid>
       <Grid
@@ -105,7 +119,11 @@ const Game = () => {
                   alignItems: "center",
                   position: "relative",
                   ...(!symbol &&
-                    !ticTacToeState.matches("gameEnd") && {
+                    !ticTacToeState.matches("gameEnd") &&
+                    !(
+                      ticTacToeState.context.playerMode === Mode.PvC &&
+                      ticTacToeState.matches({ playing: "circlePlaying" })
+                    ) && {
                       ":hover": {
                         cursor: "pointer",
                         bgcolor: colors.purple[200],
